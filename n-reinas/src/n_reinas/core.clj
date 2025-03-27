@@ -4,31 +4,39 @@
 (defn seguro? [tablero fila columna]
   "Verifica si es seguro colocar una reina en la posición (fila, columna)"
   (let [n (count tablero)]
-    (loop [i 0]
-      (cond
-        (= i n) true
-        (or (= (nth (nth tablero i) columna) 1)
-            (some (fn [r] (and (< r fila) (= (nth (nth tablero r) columna) 1))) (range n))) false
-        :else (recur (inc i))))))
+    (every?
+     (fn [i]
+       (and
+        (not= (get-in tablero [i columna] 0) 1)  ; Misma columna
+        (not (and (>= fila i) (>= columna i) (= (get-in tablero [(- fila i) (- columna i)] 0) 1)))  ; Diagonal superior izquierda
+        (not (and (>= fila i) (>= (- (dec n) columna) i) (= (get-in tablero [(- fila i) (+ columna i)] 0) 1))))) ; Diagonal superior derecha
+     (range fila))))
 
 (defn colocar-reina [tablero fila]
-  "Coloca una reina en la fila 'fila' en la primera columna segura"
+  "Coloca una reina en la fila 'fila' y explora todas las soluciones"
   (let [n (count tablero)]
-    (loop [columna 0]
-      (cond
-        (= columna n) nil
-        (seguro? tablero fila columna) (let [nuevo-tablero (assoc-in tablero [fila columna] 1)]
-                                         (if (= fila (dec n))
-                                           nuevo-tablero
-                                           (colocar-reina nuevo-tablero (inc fila))))
-        :else (recur (inc columna))))))
+    (if (= fila n)
+      tablero ; Solución encontrada, devuelve el tablero
+      (loop [columna 0]
+        (if (= columna n)
+          nil ; No se encontró una solución en esta rama
+          (if (seguro? tablero fila columna)
+            (let [nuevo-tablero (assoc-in tablero [fila columna] 1)]
+              (or (colocar-reina nuevo-tablero (inc fila))  ; Intenta colocar en la siguiente fila
+                  (recur (inc columna))))  ; Si falla, prueba la siguiente columna
+            (recur (inc columna))))))))
 
 (defn resolver-n-reinas [n]
   "Resuelve el problema de las N reinas para un tablero de tamaño n x n"
-  (let [tablero-inicial (vec (repeat n (vec (repeat n 0))))]
-    (colocar-reina tablero-inicial 0)))
+  (colocar-reina (vec (repeat n (vec (repeat n 0)))) 0))
 
 (defn -main [& args]
-  (let [n 4]
-    (println "Solución para N reinas con n=" n)
-    (println (resolver-n-reinas n))))
+  (let [n 4
+        solucion (resolver-n-reinas n)]
+    (if solucion
+      (do
+        (println "La matriz de ejemplo es:")
+        (doseq [fila solucion]
+          (println (str "{" (clojure.string/join ", " fila) "}")))
+        (println "Solución encontrada."))
+      (println "No hay solución para N =" n))))

@@ -1,3 +1,5 @@
+"Alejandra Rodriguez de la Cruz No.Control:22760049"
+
 (ns n-reinas.core
   (:gen-class))
 
@@ -31,12 +33,12 @@
   (colocar-reina (vec (repeat n (vec (repeat n 0)))) 0))
 
 (defn -main [& args]
-  (let [n 4
+  (let [n 3
         solucion (resolver-n-reinas n)]
     (if solucion
       (do
         (println "La matriz de ejemplo es:")
         (doseq [fila solucion]
           (println (str "{" (clojure.string/join ", " fila) "}")))
-        (println "Solución encontrada."))
+        (println "Solución encontrada N="n))
       (println "No hay solución para N =" n))))
